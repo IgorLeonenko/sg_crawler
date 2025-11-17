@@ -212,18 +212,25 @@ def extract_listing_info(element: WebElement) -> Listing | None:
     )
 
 
-def collect_free_listings_on_url(driver: webdriver.Chrome, url: str) -> List[Listing]:
+def collect_free_listings_on_url(driver: webdriver.Chrome, url: str, retries: int = 2) -> List[Listing]:
     """Grab zero-priced listings from a specific listing url."""
-    try:
-        driver.get(url)
-    except TimeoutException:
-        print(f"Timed out loading {url}, skipping.")
-        driver.execute_script("window.stop();")
-        return []
-    except WebDriverException as exc:
-        print(f"Failed to load {url}: {exc.msg}")
-        return []
-    wait_for_listings(driver)
+    attempt = 0
+    while attempt <= retries:
+        try:
+            driver.get(url)
+            wait_for_listings(driver)
+            break
+        except TimeoutException:
+            attempt += 1
+            print(f"Timed out loading {url}, attempt {attempt}/{retries + 1}.")
+            driver.execute_script("window.stop();")
+            if attempt > retries:
+                print(f"Giving up on {url} after repeated timeouts.")
+                return []
+            time.sleep(2)
+        except WebDriverException as exc:
+            print(f"Failed to load {url}: {exc.msg}")
+            return []
     scroll_page(driver)
     items = driver.find_elements(By.CSS_SELECTOR, "ul.listing-products li.listing-product")
     free_entries: List[Listing] = []
