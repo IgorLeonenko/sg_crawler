@@ -33,8 +33,6 @@ STATIC_LISTING_URLS = [
     "https://www.solar-guitars.com/categorie-produit/accessories/",
 ]
 RESULTS_PATH = Path("results.json")
-DEFAULT_EMAIL_RECIPIENT = "igrleon@gmail.com"
-
 
 @dataclass
 class Listing:
@@ -100,7 +98,7 @@ def get_email_settings() -> Tuple[str, int, str, str, str, str, bool] | None:
     user = os.getenv("EMAIL_USER")
     password = os.getenv("EMAIL_PASSWORD")
     sender = os.getenv("EMAIL_FROM", user)
-    recipient = os.getenv("EMAIL_TO", DEFAULT_EMAIL_RECIPIENT)
+    recipient = os.getenv("EMAIL_TO")
     use_tls = _bool_from_env("EMAIL_USE_TLS", True)
 
     if not user or not password:
