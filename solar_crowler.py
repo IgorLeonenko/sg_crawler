@@ -201,6 +201,7 @@ def _read_price_value(element: WebElement) -> tuple[str | None, float | None]:
         if price_value is None and price_text:
             numeric = (
                 price_text.replace("€", "")
+                .replace("$", "")
                 .replace(",", "")
                 .split()  # there might be both original and sale prices
             )
