@@ -20,11 +20,6 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-try:
-    from dotenv import load_dotenv
-except ImportError:  # pragma: no cover - optional dependency
-    load_dotenv = None
-
 LISTING_URL_TEMPLATE = "https://www.solar-guitars.com/shop/page/{page}/"
 PAGE_RANGE = range(1, 11)
 STATIC_LISTING_URLS = [
@@ -71,17 +66,6 @@ def load_existing_results() -> Tuple[List[dict], Set[str]]:
 def save_results(entries: List[dict]) -> None:
     """Persist entries to disk."""
     RESULTS_PATH.write_text(json.dumps(entries, indent=2))
-
-
-def load_env_file() -> None:
-    """Load .env if python-dotenv is present."""
-    env_path = Path(".env")
-    if not env_path.exists():
-        return
-    if load_dotenv is None:
-        print("python-dotenv not installed; .env file ignored.")
-        return
-    load_dotenv(dotenv_path=env_path)
 
 
 def _bool_from_env(name: str, default: bool = True) -> bool:
@@ -258,7 +242,6 @@ def collect_free_listings_on_page(driver: webdriver.Chrome, page_number: int) ->
 
 
 def main() -> None:
-    load_env_file()
     driver = build_driver(headless=True)
     try:
         run_listings: List[Listing] = []
