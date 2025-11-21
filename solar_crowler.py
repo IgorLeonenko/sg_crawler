@@ -40,7 +40,7 @@ class Listing:
 
 
 def load_existing_results() -> Tuple[List[dict], Set[str]]:
-    """Return stored entries and a set of known links."""
+    """Return stored entries (allowing historical duplicates) and a set of known links."""
     if not RESULTS_PATH.exists():
         return [], set()
     try:
@@ -50,17 +50,17 @@ def load_existing_results() -> Tuple[List[dict], Set[str]]:
     except (OSError, json.JSONDecodeError, ValueError) as exc:
         print(f"Failed to read {RESULTS_PATH}: {exc}. Rebuilding file.")
         return [], set()
-    deduped: List[dict] = []
+    cleaned: List[dict] = []
     links: Set[str] = set()
     for entry in data:
         if not isinstance(entry, dict):
             continue
         link = entry.get("link")
-        if not isinstance(link, str) or not link or link in links:
+        if not isinstance(link, str) or not link:
             continue
         links.add(link)
-        deduped.append(entry)
-    return deduped, links
+        cleaned.append(entry)
+    return cleaned, links
 
 
 def save_results(entries: List[dict]) -> None:
@@ -278,12 +278,13 @@ def main() -> None:
             run_listings.extend(url_listings)
             print(f"{url} scanned, zero-price items found: {len(url_listings)}")
 
-        stored_entries, known_links = load_existing_results()
+        stored_entries, _known_links = load_existing_results()
         new_entries: List[dict] = []
+        run_seen: Set[str] = set()
         for listing in run_listings:
-            if listing.link in known_links:
+            if listing.link in run_seen:
                 continue
-            known_links.add(listing.link)
+            run_seen.add(listing.link)
             entry = listing.to_dict()
             stored_entries.append(entry)
             new_entries.append(entry)
