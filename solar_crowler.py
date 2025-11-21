@@ -197,10 +197,27 @@ def _read_price_value(element: WebElement) -> tuple[str | None, float | None]:
     return price_text, price_value
 
 
+def _has_sold_out_badge(element: WebElement) -> bool:
+    """Return True when the ::before pseudo-element renders a 'Sold out' banner."""
+    try:
+        content: str | None = element.parent.execute_script(
+            "return window.getComputedStyle(arguments[0], '::before').getPropertyValue('content');",
+            element,
+        )
+    except WebDriverException:
+        return False
+    if not content:
+        return False
+    normalized = content.strip().strip("'").strip('"').lower()
+    return "sold out" in normalized
+
+
 def extract_listing_info(element: WebElement) -> Listing | None:
     """Return listing details if the price is zero, else None."""
     price_text, price_value = _read_price_value(element)
     if price_value is None or price_value != 0.0:
+        return None
+    if _has_sold_out_badge(element):
         return None
 
     link_element = element.find_element(By.CSS_SELECTOR, "a.totallink")
